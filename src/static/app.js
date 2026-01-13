@@ -882,28 +882,33 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Social sharing functions
+  function getShareUrl() {
+    return window.location.href.split('#')[0].split('?')[0];
+  }
+
   function shareOnFacebook(activityName, description) {
-    const url = window.location.href;
+    const url = getShareUrl();
     const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(`Check out ${activityName} at Mergington High School! ${description}`)}`;
-    window.open(shareUrl, '_blank', 'width=600,height=400');
+    window.open(shareUrl, '_blank', 'width=600,height=400,noopener,noreferrer');
   }
 
   function shareOnTwitter(activityName, description) {
-    const url = window.location.href;
+    const url = getShareUrl();
     const text = `Check out ${activityName} at Mergington High School! ${description}`;
     const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
-    window.open(shareUrl, '_blank', 'width=600,height=400');
+    window.open(shareUrl, '_blank', 'width=600,height=400,noopener,noreferrer');
   }
 
   function shareViaEmail(activityName, description, schedule) {
+    const url = getShareUrl();
     const subject = `Check out ${activityName} at Mergington High School`;
-    const body = `I wanted to share this activity with you:\n\n${activityName}\n\n${description}\n\nSchedule: ${schedule}\n\nView all activities at: ${window.location.href}`;
+    const body = `I wanted to share this activity with you:\n\n${activityName}\n\n${description}\n\nSchedule: ${schedule}\n\nView all activities at: ${url}`;
     const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.location.href = mailtoLink;
   }
 
   function copyActivityLink(activityName, buttonElement) {
-    const url = window.location.href.split('#')[0]; // Remove any existing hash
+    const url = getShareUrl();
     const activityUrl = `${url}#${encodeURIComponent(activityName)}`;
     
     // Use Clipboard API with fallback
@@ -921,6 +926,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Fallback copy method using textarea
+  // Note: document.execCommand('copy') is deprecated but kept as fallback for older browsers
   function fallbackCopyToClipboard(text, buttonElement) {
     const textarea = document.createElement('textarea');
     textarea.value = text;
@@ -930,6 +936,7 @@ document.addEventListener("DOMContentLoaded", () => {
     textarea.select();
     
     try {
+      // Using deprecated execCommand as fallback for older browsers
       const successful = document.execCommand('copy');
       if (successful) {
         showCopySuccess(buttonElement);
