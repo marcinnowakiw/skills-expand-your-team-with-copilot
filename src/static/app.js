@@ -903,26 +903,59 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function copyActivityLink(activityName, buttonElement) {
-    const url = window.location.href;
+    const url = window.location.href.split('#')[0]; // Remove any existing hash
     const activityUrl = `${url}#${encodeURIComponent(activityName)}`;
     
-    // Use Clipboard API
-    navigator.clipboard.writeText(activityUrl).then(() => {
-      // Show success feedback
-      const originalIcon = buttonElement.querySelector('.share-icon').textContent;
-      buttonElement.querySelector('.share-icon').textContent = '✓';
-      buttonElement.style.backgroundColor = 'var(--success)';
-      
-      setTimeout(() => {
-        buttonElement.querySelector('.share-icon').textContent = originalIcon;
-        buttonElement.style.backgroundColor = '';
-      }, 2000);
-      
-      showMessage('Link copied to clipboard!', 'success');
-    }).catch(err => {
-      console.error('Failed to copy link:', err);
+    // Use Clipboard API with fallback
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(activityUrl).then(() => {
+        showCopySuccess(buttonElement);
+      }).catch(err => {
+        console.error('Failed to copy link:', err);
+        fallbackCopyToClipboard(activityUrl, buttonElement);
+      });
+    } else {
+      // Fallback for browsers that don't support Clipboard API
+      fallbackCopyToClipboard(activityUrl, buttonElement);
+    }
+  }
+
+  // Fallback copy method using textarea
+  function fallbackCopyToClipboard(text, buttonElement) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) {
+        showCopySuccess(buttonElement);
+      } else {
+        showMessage('Failed to copy link. Please try again.', 'error');
+      }
+    } catch (err) {
+      console.error('Fallback copy failed:', err);
       showMessage('Failed to copy link. Please try again.', 'error');
-    });
+    }
+    
+    document.body.removeChild(textarea);
+  }
+
+  // Show visual feedback for successful copy
+  function showCopySuccess(buttonElement) {
+    const originalIcon = buttonElement.querySelector('.share-icon').textContent;
+    buttonElement.querySelector('.share-icon').textContent = '✓';
+    buttonElement.style.backgroundColor = 'var(--success)';
+    
+    setTimeout(() => {
+      buttonElement.querySelector('.share-icon').textContent = originalIcon;
+      buttonElement.style.backgroundColor = '';
+    }, 2000);
+    
+    showMessage('Link copied to clipboard!', 'success');
   }
 
   // Expose filter functions to window for future UI control
